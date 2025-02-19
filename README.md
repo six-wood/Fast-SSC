@@ -103,7 +103,7 @@ cd <root dir of this repo>
 bash tools/dist_train.sh projects/fssc/config/fssc-train.py 2 
 ```
 
-*To optimize memory usage during training, you can set with_cpu=True in `projects/fssc/config/base/net.py` to utilize torch.utils.checkpoint in the training process.*
+*To optimize memory usage during training, you can set with_cp=True in `projects/fssc/config/base/net.py` to utilize torch.utils.checkpoint in the training process.*
 
 ### Validation
 
@@ -128,3 +128,4 @@ This project is not possible without multiple great opensourced codebases.
 * [SSC-RS](https://github.com/Jieqianyu/SSC-RS)
 * [SSA-SC](https://github.com/jokester-zzz/SSA-SC)
 * [VoxFormer](https://github.com/NVlabs/VoxFormer)
+* [MMDetection3D](https://github.com/open-mmlab/mmdetection3d)
