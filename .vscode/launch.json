@@ -15,7 +15,7 @@
                 "CUDA_LAUNCH_BLOCKING": "1",
             },
             "args": [
-                "projects/fssc/config/fssc-train-max.py"
+                "projects/fssc/config/fssc-train.py"
             ],
         },
     ]
