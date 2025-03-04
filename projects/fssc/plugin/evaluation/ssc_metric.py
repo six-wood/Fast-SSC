@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from typing import Dict, Optional, Sequence
 from mmengine.evaluator import BaseMetric
 from mmengine.logging import MMLogger
@@ -16,8 +17,13 @@ class SSCompute:
         self.ignore_index = ignore_index
         self.reset()
 
-    def add_batch(self, y_pred: np.ndarray, y_true: np.ndarray) -> None:
+    def add_batch(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> None:
         """Add a batch of predictions and ground truth for metric computation."""
+        
+        self.tps = self.tps.to(device=y_pred.device)
+        self.fps = self.fps.to(device=y_pred.device)
+        self.fns = self.fns.to(device=y_pred.device)
+        
         mask = y_true != self.ignore_index
         tp, fp, fn = self._get_score_completion(y_pred, y_true, mask)
 
@@ -42,11 +48,11 @@ class SSCompute:
 
         iou_ssc = self.tps / (self.tps + self.fps + self.fns + 1e-5)
         return {
-            "precision": precision,
-            "recall": recall,
-            "iou": iou,
-            "iou_ssc": iou_ssc,
-            "iou_ssc_mean": np.mean(iou_ssc[1:]),  # Excluding background class
+            "precision": precision.item(),
+            "recall": recall.item(),
+            "iou": iou.item(),
+            "iou_ssc": [val.item() for val in iou_ssc],
+            "iou_ssc_mean": torch.mean(iou_ssc[1:]),  # Excluding background class
         }
 
     def reset(self) -> None:
@@ -54,15 +60,13 @@ class SSCompute:
         self.completion_tp = 0
         self.completion_fp = 0
         self.completion_fn = 0
-        self.tps = np.zeros(self.n_classes, dtype=np.uint64)
-        self.fps = np.zeros(self.n_classes, dtype=np.uint64)
-        self.fns = np.zeros(self.n_classes, dtype=np.uint64)
+        self.tps = torch.zeros(self.n_classes, dtype=torch.int64)
+        self.fps = torch.zeros(self.n_classes, dtype=torch.int64)
+        self.fns = torch.zeros(self.n_classes, dtype=torch.int64)
 
-    def _get_score_completion(self, predict: np.ndarray, target: np.ndarray, mask: np.ndarray) -> tuple:
+    def _get_score_completion(self, predict: torch.Tensor, target: torch.Tensor, mask: torch.Tensor) -> tuple:
         """Calculate true positives (TP), false positives (FP), and false negatives (FN) for completion."""
         # Apply mask and compute binary prediction vs target comparison
-        predict = np.copy(predict)
-        target = np.copy(target)
 
         predict[~mask] = 0
         target[~mask] = 0
@@ -70,16 +74,16 @@ class SSCompute:
         target_flat = target.reshape(-1)
         predict_flat = predict.reshape(-1)
 
-        b_pred = (predict_flat != self.free_index).astype(np.uint64)
-        b_true = (target_flat != self.free_index).astype(np.uint64)
+        b_pred = (predict_flat != self.free_index).to(torch.int64)
+        b_true = (target_flat != self.free_index).to(torch.int64)
 
-        tp = np.sum((b_true == 1) & (b_pred == 1))
-        fp = np.sum((b_true == 0) & (b_pred == 1))
-        fn = np.sum((b_true == 1) & (b_pred == 0))
+        tp = torch.sum((b_true == 1) & (b_pred == 1))
+        fp = torch.sum((b_true == 0) & (b_pred == 1))
+        fn = torch.sum((b_true == 1) & (b_pred == 0))
 
         return tp, fp, fn
 
-    def _get_score_semantic_and_completion(self, predict: np.ndarray, target: np.ndarray, mask: np.ndarray) -> tuple:
+    def _get_score_semantic_and_completion(self, predict: torch.Tensor, target: torch.Tensor, mask: torch.Tensor) -> tuple:
         """Compute TP, FP, FN for semantic segmentation and completion."""
         predict *= mask
         target *= mask
@@ -88,12 +92,13 @@ class SSCompute:
         predict_flat = predict.reshape(-1)
 
         # Create class masks and compute TP, FP, FN for each class
-        class_masks_true = np.equal(target_flat[:, None], np.arange(self.n_classes))
-        class_masks_pred = np.equal(predict_flat[:, None], np.arange(self.n_classes))
+        n_class = torch.arange(self.n_classes).to(predict.device)
+        class_masks_true = torch.eq(target_flat[:, None], n_class)
+        class_masks_pred = torch.eq(predict_flat[:, None], n_class)
 
-        tp_sum = np.sum(class_masks_true & class_masks_pred, axis=0).astype(np.uint64)
-        fp_sum = np.sum(~class_masks_true & class_masks_pred, axis=0).astype(np.uint64)
-        fn_sum = np.sum(class_masks_true & ~class_masks_pred, axis=0).astype(np.uint64)
+        tp_sum = torch.sum(class_masks_true & class_masks_pred, dim=0).to(dtype=torch.int64, device=target.device)
+        fp_sum = torch.sum(~class_masks_true & class_masks_pred, dim=0).to(dtype=torch.int64, device=target.device)
+        fn_sum = torch.sum(class_masks_true & ~class_masks_pred, dim=0).to(dtype=torch.int64, device=target.device)
 
         return tp_sum, fp_sum, fn_sum
 
@@ -196,7 +201,7 @@ class FPSMetric(BaseMetric):
 
     def log_show(self, logger=None) -> Dict[str, float]:
         """Display FPS in a table."""
-        time = np.mean(self.time_cost)
+        time = torch.mean(self.time_cost)
         fps = 1 / time
 
         ret_dict = {"time": float(time), "FPS": float(fps)}

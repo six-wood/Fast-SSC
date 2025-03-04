@@ -222,8 +222,8 @@ class SscNet(MVXTwoStageDetector):
             - ``pts_seg_logits`` (PointData): Predicted logits of 3D semantic
               segmentation before normalization.
         """
-        ssc_true = np.stack([data_sample.metainfo["voxel_label"] for data_sample in batch_data_samples], axis=0)
-        ssc_pred = ssc_labels.cpu().numpy()
+        ssc_true = torch.from_numpy(np.stack([data_sample.metainfo["voxel_label"] for data_sample in batch_data_samples], axis=0)).to(ssc_labels.device)
+        ssc_pred = ssc_labels.clone()
 
         for i, batch_data in enumerate(batch_data_samples):
             batch_data.set_data({"y_pred": ssc_pred[i]})
