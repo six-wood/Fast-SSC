@@ -109,7 +109,7 @@ bash tools/dist_train.sh projects/fssc/config/fssc-train.py 2
 
 ```bash
 cd <root dir of this repo>
-bash tools/dist_test.sh projects/fssc/config/fssc-val.py <path/to/model.pth> 2
+python tools/test.py projects/fssc/config/fssc-val.py <path/to/model.pth>
 ```
 
 ### Test
