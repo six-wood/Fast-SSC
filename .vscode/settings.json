@@ -1,0 +1,12 @@
+{
+	// Path information for files that do not require diagnostics
+	"python.analysis.exclude": [
+		// A file or folder ending with test.py in the src folder or any subfolder
+		"data",
+        "word_dirs",
+	],
+	"black-formatter.args": [
+		"--line-length",
+		"200"
+	]
+}
