@@ -228,29 +228,21 @@ class PDB(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 
-        def _inner_forward(x):
-            y_list = []
-            for i in range(0, len(self.dilations)):
-                x_i = self.aspp[i](x)
-                x_i = self.norm[i](x_i)
-                x_i = self.act(x_i)
-                y_list.append(x_i)
 
-            y = torch.cat(y_list, dim=1)
-            y = self.conv_out(y)
-            y = self.norm_out(y)
-            y = y + x
-            return y
+        y_list = []
+        for i in range(0, len(self.dilations)):
+            x_i = self.aspp[i](x)
+            x_i = self.norm[i](x_i)
+            x_i = self.act(x_i)
+            y_list.append(x_i)
 
-        if self.with_cp:
-            y = cp.checkpoint(_inner_forward, x, use_reentrant=False)
-        else:
-            y = _inner_forward(x)
+        y = torch.cat(y_list, dim=1)
+        y = self.conv_out(y)
+        y = self.norm_out(y)
+        y = y + x
         y = self.act(y)
-
+        
         return y
-
-
 @MODELS.register_module()
 class SparseBackbone(BaseModule):
     """MDB-based Sparse Backbone for SSC

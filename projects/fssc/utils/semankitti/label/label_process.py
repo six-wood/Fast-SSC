@@ -56,10 +56,10 @@ def generate_label(config):
     remap_lut = SemanticKittiIO._get_remap_lut(config.config_path)
 
     for sequence in sequences:
-        sequence_path = os.path.join(config.kitti_root, "sequences", sequence)
+        sequence_path = os.path.join(config.data_root, "sequences", sequence)
         label_paths = sorted(glob.glob(os.path.join(sequence_path, "voxels", "*.label")))
         invalid_paths = sorted(glob.glob(os.path.join(sequence_path, "voxels", "*.invalid")))
-        out_dir = os.path.join(config.kitti_preprocess_root, "ssc", sequence)
+        out_dir = os.path.join(config.output_root, "ssc", sequence)
         os.makedirs(out_dir, exist_ok=True)
 
         Parallel(n_jobs=-1)(
@@ -97,12 +97,12 @@ def generate_rect_label(config):
     max_bound = np.array([51.2, 25.6, 4.4])
     intervals = np.array([0.2, 0.2, 0.2])
     for sequence in sequences:
-        assert os.path.exists((os.path.join(config.kitti_preprocess_root, "ssc", sequence, "*.pkl"))), "Please generate labels first"
-        sequence_path = os.path.join(config.kitti_root, "dataset", "sequences", sequence)
+        assert os.path.exists((os.path.join(config.output_root, "ssc", sequence, "*.pkl"))), "Please generate labels first"
+        sequence_path = os.path.join(config.data_root, "sequences", sequence)
         pc_paths = sorted(glob.glob(os.path.join(sequence_path, "velodyne", "*.bin")))
         pc_labels = sorted(glob.glob(os.path.join(sequence_path, "labels", "*.label")))
-        label_paths = sorted(glob.glob(os.path.join(config.kitti_preprocess_root, "ssc", sequence, "*.pkl")))
-        out_dir = os.path.join(config.kitti_preprocess_root, "ssc_rect", sequence)
+        label_paths = sorted(glob.glob(os.path.join(config.output_root, "ssc", sequence, "*.pkl")))
+        out_dir = os.path.join(config.output_root, "ssc_rect", sequence)
         os.makedirs(out_dir, exist_ok=True)
 
         Parallel(n_jobs=-1)(
@@ -113,9 +113,9 @@ def generate_rect_label(config):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("./label_preprocess.py")
-    parser.add_argument("--kitti_root", "-r", type=str, required=True, help="kitti_root")
-    parser.add_argument("--kitti_preprocess_root", "-p", type=str, required=True, help="kitti_preprocess_root")
-    parser.add_argument("--config_path", "-c", type=str, required=True, help="kitti_root")
+    parser.add_argument("--data_root", "-r", type=str, required=True, help="data_root")
+    parser.add_argument("--output_root", "-p", type=str, required=True, help="output_root")
+    parser.add_argument("--config_path", "-c", type=str, required=True, help="config_path")
     parser.add_argument("--rect_label", action="store_true", help="Generate rectified labels")
 
     config, unparsed = parser.parse_known_args()

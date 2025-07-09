@@ -7,7 +7,7 @@ from torch.optim.adamw import AdamW
 
 epoch_max = 40
 optim_wrapper = dict(
-    type=OptimWrapper,
+    type="OptimWrapper",
     optimizer=dict(
         type=AdamW,
         lr=1e-3,

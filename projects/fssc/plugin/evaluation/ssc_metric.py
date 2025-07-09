@@ -19,11 +19,11 @@ class SSCompute:
 
     def add_batch(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> None:
         """Add a batch of predictions and ground truth for metric computation."""
-        
+
         self.tps = self.tps.to(device=y_pred.device)
         self.fps = self.fps.to(device=y_pred.device)
         self.fns = self.fns.to(device=y_pred.device)
-        
+
         mask = y_true != self.ignore_index
         tp, fp, fn = self._get_score_completion(y_pred, y_true, mask)
 
@@ -32,7 +32,9 @@ class SSCompute:
         self.completion_fp += fp
         self.completion_fn += fn
 
-        tp_sum, fp_sum, fn_sum = self._get_score_semantic_and_completion(y_pred, y_true, mask)
+        tp_sum, fp_sum, fn_sum = self._get_score_semantic_and_completion(
+            y_pred, y_true, mask
+        )
         self.tps += tp_sum
         self.fps += fp_sum
         self.fns += fn_sum
@@ -42,7 +44,9 @@ class SSCompute:
         if self.completion_tp != 0:
             precision = self.completion_tp / (self.completion_tp + self.completion_fp)
             recall = self.completion_tp / (self.completion_tp + self.completion_fn)
-            iou = self.completion_tp / (self.completion_tp + self.completion_fp + self.completion_fn)
+            iou = self.completion_tp / (
+                self.completion_tp + self.completion_fp + self.completion_fn
+            )
         else:
             precision, recall, iou = 0, 0, 0
 
@@ -64,7 +68,9 @@ class SSCompute:
         self.fps = torch.zeros(self.n_classes, dtype=torch.int64)
         self.fns = torch.zeros(self.n_classes, dtype=torch.int64)
 
-    def _get_score_completion(self, predict: torch.Tensor, target: torch.Tensor, mask: torch.Tensor) -> tuple:
+    def _get_score_completion(
+        self, predict: torch.Tensor, target: torch.Tensor, mask: torch.Tensor
+    ) -> tuple:
         """Calculate true positives (TP), false positives (FP), and false negatives (FN) for completion."""
         # Apply mask and compute binary prediction vs target comparison
 
@@ -83,7 +89,9 @@ class SSCompute:
 
         return tp, fp, fn
 
-    def _get_score_semantic_and_completion(self, predict: torch.Tensor, target: torch.Tensor, mask: torch.Tensor) -> tuple:
+    def _get_score_semantic_and_completion(
+        self, predict: torch.Tensor, target: torch.Tensor, mask: torch.Tensor
+    ) -> tuple:
         """Compute TP, FP, FN for semantic segmentation and completion."""
         predict *= mask
         target *= mask
@@ -96,9 +104,15 @@ class SSCompute:
         class_masks_true = torch.eq(target_flat[:, None], n_class)
         class_masks_pred = torch.eq(predict_flat[:, None], n_class)
 
-        tp_sum = torch.sum(class_masks_true & class_masks_pred, dim=0).to(dtype=torch.int64, device=target.device)
-        fp_sum = torch.sum(~class_masks_true & class_masks_pred, dim=0).to(dtype=torch.int64, device=target.device)
-        fn_sum = torch.sum(class_masks_true & ~class_masks_pred, dim=0).to(dtype=torch.int64, device=target.device)
+        tp_sum = torch.sum(class_masks_true & class_masks_pred, dim=0).to(
+            dtype=torch.int64, device=target.device
+        )
+        fp_sum = torch.sum(~class_masks_true & class_masks_pred, dim=0).to(
+            dtype=torch.int64, device=target.device
+        )
+        fn_sum = torch.sum(class_masks_true & ~class_masks_pred, dim=0).to(
+            dtype=torch.int64, device=target.device
+        )
 
         return tp_sum, fp_sum, fn_sum
 
@@ -110,12 +124,14 @@ class BaseSscMetric(BaseMetric):
         self,
         collect_device: str = "cpu",
         prefix: Optional[str] = None,
+        num_classes: int = 20,
+        free_index: int = 0,
         ignore_index: int = 255,
         **kwargs,
     ):
         super().__init__(prefix=prefix, collect_device=collect_device)
         self.time_cost = []
-        self.ssc_compute = SSCompute(kwargs.get("num_classes", 20), **kwargs)
+        self.ssc_compute = SSCompute(num_classes, free_index, ignore_index)
         self.ignore_index = ignore_index
 
     def process(self, data_batch: dict, data_samples: Sequence[dict]) -> None:
@@ -124,7 +140,9 @@ class BaseSscMetric(BaseMetric):
             self.ssc_compute.add_batch(data_sample["y_pred"], data_sample["y_true"])
             self.time_cost.append(data_sample["time_cost"])
 
-    def log_show(self, stats: Dict[str, float], label2cat: dict, ignore_index: int, logger=None) -> Dict[str, float]:
+    def log_show(
+        self, stats: Dict[str, float], label2cat: dict, ignore_index: int, logger=None
+    ) -> Dict[str, float]:
         """Display metrics in a table and return them as a dictionary."""
         precision = stats["precision"]
         recall = stats["recall"]
@@ -134,7 +152,11 @@ class BaseSscMetric(BaseMetric):
         time_cost = np.mean(self.time_cost)
         fps = 1 / time_cost
 
-        header = ["classes"] + [label2cat[i] for i in range(len(label2cat))] + ["iou", "miou", "precision", "recall", "time", "FPS"]
+        header = (
+            ["classes"]
+            + [label2cat[i] for i in range(len(label2cat))]
+            + ["iou", "miou", "precision", "recall", "time", "FPS"]
+        )
         table_columns = (
             [["results"]]
             + [[f"{iou_ssc[i]:.4f}"] for i in range(len(label2cat))]
@@ -172,15 +194,32 @@ class BaseSscMetric(BaseMetric):
 class SscMetric(BaseSscMetric):
     """Compute metrics for semantic segmentation completion (SS)."""
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        collect_device: str = "cpu",
+        prefix: Optional[str] = None,
+        num_classes: int = 20,
+        free_index: int = 0,
+        ignore_index: int = 255,
+        **kwargs,
+    ):
+        super().__init__(
+            collect_device=collect_device,
+            prefix=prefix,
+            num_classes=num_classes,
+            free_index=free_index,
+            ignore_index=ignore_index,
+            **kwargs,
+        )
 
     def compute_metrics(self, results: list) -> Dict[str, float]:
 
         label2cat = self.dataset_meta["label2cat"]
         ignore_index = self.dataset_meta.get("ignore_index", self.ignore_index)
         stats = self.ssc_compute.get_stats()
-        result_dict = self.log_show(stats, label2cat, ignore_index, logger=MMLogger.get_current_instance())
+        result_dict = self.log_show(
+            stats, label2cat, ignore_index, logger=MMLogger.get_current_instance()
+        )
         self.ssc_compute.reset()
 
         return result_dict
@@ -190,7 +229,9 @@ class SscMetric(BaseSscMetric):
 class FPSMetric(BaseMetric):
     """Compute FPS metric for semantic segmentation."""
 
-    def __init__(self, collect_device: str = "cpu", prefix: Optional[str] = None, **kwargs):
+    def __init__(
+        self, collect_device: str = "cpu", prefix: Optional[str] = None, **kwargs
+    ):
         super().__init__(prefix=prefix, collect_device=collect_device)
         self.time_cost = []
 
@@ -201,7 +242,7 @@ class FPSMetric(BaseMetric):
 
     def log_show(self, logger=None) -> Dict[str, float]:
         """Display FPS in a table."""
-        time = torch.mean(self.time_cost)
+        time = np.mean(self.time_cost)
         fps = 1 / time
 
         ret_dict = {"time": float(time), "FPS": float(fps)}

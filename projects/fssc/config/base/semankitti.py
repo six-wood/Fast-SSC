@@ -4,8 +4,13 @@ from mmdet3d.datasets.transforms import (
 )
 from mmdet3d.datasets.utils import Pack3DDetInputs
 from projects.fssc.plugin.evaluation.ssc_metric import SscMetric, FPSMetric
-from projects.fssc.plugin.datasets.semantickitti_dataset import SemanticKittiSC as dataset_type
-from projects.fssc.plugin.datasets.transforms_3d import LoadSscLabelFromFile, RandomFlipOcc
+from projects.fssc.plugin.datasets.semantickitti_dataset import (
+    SemanticKittiSC as dataset_type,
+)
+from projects.fssc.plugin.datasets.transforms_3d import (
+    LoadSscLabelFromFile,
+    RandomFlipOcc,
+)
 
 from mmengine.config import read_base
 
@@ -127,20 +132,42 @@ input_modality = dict(use_lidar=True, use_camera=True)
 backend_args = None
 
 train_pipeline = [
-    dict(type=LoadPointsFromFile, coord_type="LIDAR", load_dim=4, use_dim=4, backend_args=backend_args),
+    dict(
+        type=LoadPointsFromFile,
+        coord_type="LIDAR",
+        load_dim=4,
+        use_dim=4,
+        backend_args=backend_args,
+    ),
     dict(type=LoadSscLabelFromFile),
     dict(type=RandomFlipOcc, ratio=0.5),
-    dict(type=Pack3DDetInputs, keys=["points"], meta_keys=("voxel_label", "lidar_path")),
+    dict(
+        type=Pack3DDetInputs, keys=["points"], meta_keys=("voxel_label", "lidar_path")
+    ),
 ]
 
 val_pipeline = [
-    dict(type=LoadPointsFromFile, coord_type="LIDAR", load_dim=4, use_dim=4, backend_args=backend_args),
+    dict(
+        type=LoadPointsFromFile,
+        coord_type="LIDAR",
+        load_dim=4,
+        use_dim=4,
+        backend_args=backend_args,
+    ),
     dict(type=LoadSscLabelFromFile),
-    dict(type=Pack3DDetInputs, keys=["points"], meta_keys=("voxel_label", "lidar_path")),
+    dict(
+        type=Pack3DDetInputs, keys=["points"], meta_keys=("voxel_label", "lidar_path")
+    ),
 ]
 
 test_pipeline = [
-    dict(type=LoadPointsFromFile, coord_type="LIDAR", load_dim=4, use_dim=4, backend_args=backend_args),
+    dict(
+        type=LoadPointsFromFile,
+        coord_type="LIDAR",
+        load_dim=4,
+        use_dim=4,
+        backend_args=backend_args,
+    ),
     dict(type=Pack3DDetInputs, keys=["points"], meta_keys=("lidar_path",)),
 ]
 
@@ -153,7 +180,7 @@ train_split = dict(
     metainfo=metainfo,
     modality=input_modality,
     backend_args=backend_args,
-    ignore_index=free_index,
+    ignore_index=ignore_index,
 )
 
 val_split = dict(
@@ -165,7 +192,7 @@ val_split = dict(
     modality=input_modality,
     test_mode=True,
     backend_args=backend_args,
-    ignore_index=free_index,
+    ignore_index=ignore_index,
 )
 
 test_split = dict(
@@ -177,7 +204,7 @@ test_split = dict(
     modality=input_modality,
     test_mode=True,
     backend_args=backend_args,
-    ignore_index=free_index,
+    ignore_index=ignore_index,
 )
 
 train_dataloader = dict(
@@ -207,5 +234,10 @@ test_dataloader = dict(
 )
 
 
-val_evaluator = dict(type=SscMetric)
+val_evaluator = dict(
+    type=SscMetric,
+    num_classes=num_classes,
+    free_index=free_index,
+    ignore_index=ignore_index,
+)
 test_evaluator = dict(type=FPSMetric)

@@ -54,13 +54,13 @@ pip install -v -e .
 2. To speed up the training process, we merge the voxel labels (.invalid, .label, .occluded) into a single pkl file for each frame. You can use the following command to generate the pkl file. The parameter `--rect_label` uses the label rectification algorithm introduced in [SCPNet](https://github.com/SCPNet/Codes-for-SCPNet).
 
     ```bash
-    python projects/fssc/utils/semankitti/label/label_process.py --data_root=data/semantickitti --output=data/semantickitti --config_path=utils/label/semantic-kitti.yaml --rect_label(optional)
+    python projects/fssc/utils/semankitti/label/label_process.py --data_root=data/semantickitti --output=data/semantickitti --config_path=projects/fssc/utils/semankitti/label/semantic-kitti.yaml --rect_label(optional)
     ```
 
 3. Greate the annotation information for the dataset using following command.
 
     ```bash
-    python projects/fssc/utils/semankitti/converter/create_data.py kitti --root-path data/semantickitti --out-dir data/semantickitti --extra-tag semantickittiDataset
+    python projects/fssc/utils/semankitti/converter/create_data.py semantickitti --root-path data/semantickitti --out-dir data/semantickitti --extra-tag semantickittiDataset
     ```
 
 The dataset folder should be organized as follows.
@@ -102,8 +102,6 @@ To train Fast-SSC, you can use the following command.
 cd <root dir of this repo>
 bash tools/dist_train.sh projects/fssc/config/fssc-train.py 2 
 ```
-
-*To optimize memory usage during training, you can set with_cp=True in `projects/fssc/config/base/net.py` to utilize torch.utils.checkpoint in the training process.*
 
 ### Validation
 
