@@ -8,15 +8,15 @@ If you find our work useful, please cite this.
 
 ```bibtex
 @article{Fast-SSC,
-title = {Fast semantic scene completion via two-stage representation},
-journal = {Neurocomputing},
-volume = {654},
-pages = {131323},
-year = {2025},
-issn = {0925-2312},
-doi = {https://doi.org/10.1016/j.neucom.2025.131323},
-url = {https://www.sciencedirect.com/science/article/pii/S0925231225019952},
-author = {Musen Lin and Wenguang Wang},
+    title = {Fast semantic scene completion via two-stage representation},
+    journal = {Neurocomputing},
+    volume = {654},
+    pages = {131323},
+    year = {2025},
+    issn = {0925-2312},
+    doi = {https://doi.org/10.1016/j.neucom.2025.131323},
+    url = {https://www.sciencedirect.com/science/article/pii/S0925231225019952},
+    author = {Musen Lin and Wenguang Wang},
 }
 ```
 
