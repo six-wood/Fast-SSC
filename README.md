@@ -2,7 +2,7 @@
 
 ## Fast Semantic Scene Completion via Two-stage Representation
 
-This is the official implementation of Fast-SSC introduced in "Fast Semantic Scene Completion via Two-stage Representation" [[paper]](https://github.com/six-wood/Fast-SSC.git).
+This is the official implementation of Fast-SSC introduced in "Fast Semantic Scene Completion via Two-stage Representation" [[paper]](https://www.sciencedirect.com/science/article/pii/S0925231225019952).
 
 If you find our work useful, please cite this.
 
