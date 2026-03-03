@@ -25,6 +25,7 @@ param_scheduler = None
 
 test_split.update(dict(ann_file="semantickittiDataset_infos_val.pkl", pipeline=val_pipeline))
 test_dataloader.update(dict(batch_size=1, dataset=test_split))
+test_evaluator = val_evaluator
 
 val_dataloader = None
 val_cfg = None

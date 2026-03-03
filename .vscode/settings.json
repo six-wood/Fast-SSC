@@ -8,5 +8,9 @@
 	"black-formatter.args": [
 		"--line-length",
 		"200"
+	],
+	"cursorpyright.analysis.exclude": [
+		"data",
+		"word_dirs"
 	]
 }
