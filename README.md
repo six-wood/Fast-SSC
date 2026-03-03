@@ -98,7 +98,7 @@ SemanticKITTI
 
 ## Pretrained Weights
 
-We provide a pretrained model weight trained on the train set of the SemanticKITTI dataset. You can download it from the following link.
+We provide a better pretrained model weight trained on the train set of the SemanticKITTI dataset. You can download it from the following link.
 
 | Model | Dataset | val mIoU | Download |
 |-------|---------|:--------:|----------|
